@@ -1,16 +1,16 @@
-# database.py
-from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
+import motor.motor_asyncio
 import os
+from dotenv import load_dotenv
+from pymongo import MongoClient
+import certifi
 
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("DB_NAME")
 
-client = AsyncIOMotorClient(MONGO_URI)
-database = client[DB_NAME]
+#client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+db = client.nextcandle  # this is your database name
 
-# Collections
-users_collection = database["users"]
-stocks_collection = database["stocks"]
+users_collection = db["users"]
+stocks_collection = db["stocks"]
