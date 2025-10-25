@@ -16,12 +16,14 @@ export default function Home() {
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
               Enough with uncertain decision making, NextCandle's advanced AI that analyzes 
-              historical trends, market sentiment, and real-time data guides your portfolio.
+              historical trends, market sentiment, and real-time data guides your investment decisions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Start Free Trial
-              </Button>
+              <Link href="/analysis">
+                <Button size="lg" className="text-lg px-8 py-3">
+                  Start Free Analysis
+                </Button>
+              </Link>
               <Button size="lg" variant="outline" className="text-lg px-8 py-3">
                 Watch Demo
               </Button>
@@ -78,7 +80,7 @@ export default function Home() {
                 <CardTitle className="text-gray-900 dark:text-white">Real-time Data</CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-300">
                   Access live market data, news sentiment analysis, and real-time 
-                  portfolio tracking with our comprehensive dashboard.
+                  market tracking with our comprehensive dashboard.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -91,7 +93,7 @@ export default function Home() {
                 <CardTitle className="text-gray-900 dark:text-white">Risk Management</CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-300">
                   Advanced risk assessment tools help you understand potential 
-                  downsides and optimize your portfolio allocation.
+                  downsides and optimize your investment strategy.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -136,9 +138,11 @@ export default function Home() {
             smarter, data-driven investment decisions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-              Get Started Free
-            </Button>
+            <Link href="/analysis">
+              <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+                Start Analysis Now
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600 dark:hover:text-blue-800">
               Learn More
             </Button>

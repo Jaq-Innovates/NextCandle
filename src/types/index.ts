@@ -38,30 +38,6 @@ export interface StockHistoricalData {
   volume: number;
 }
 
-// Portfolio types
-export interface Holding {
-  id: string;
-  symbol: string;
-  shares: number;
-  averagePrice: number;
-  currentPrice: number;
-  totalValue: number;
-  gainLoss: number;
-  gainLossPercent: number;
-  purchaseDate: Date;
-}
-
-export interface Portfolio {
-  id: string;
-  userId: string;
-  name: string;
-  holdings: Holding[];
-  totalValue: number;
-  totalGainLoss: number;
-  totalGainLossPercent: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // Analysis types
 export interface AnalysisResult {
@@ -159,4 +135,74 @@ export interface FilterState {
     max: number;
   };
   sentiment: string[];
+}
+
+// Analysis Form types
+export interface AnalysisFormData {
+  startDate: string;
+  endDate: string;
+  symbol: string;
+  companyName: string;
+}
+
+// Comprehensive Analysis types
+export interface ComprehensiveAnalysis {
+  id: string;
+  symbol: string;
+  companyName: string;
+  analysisPeriod: {
+    startDate: string;
+    endDate: string;
+  };
+  webScrapingResults: {
+    totalArticles: number;
+    sources: string[];
+    keyTopics: string[];
+    sentimentTrend: 'positive' | 'negative' | 'neutral' | 'mixed';
+  };
+  trendAnalysis: {
+    identifiedPatterns: string[];
+    keyEvents: string[];
+    marketReactions: string[];
+    similarHistoricalEvents: HistoricalEvent[];
+  };
+  summary: {
+    explanation: string;
+    keyFactors: string[];
+    confidence: number;
+    recommendation: 'buy' | 'sell' | 'hold';
+    riskLevel: 'low' | 'medium' | 'high';
+  };
+  monitoring: {
+    isActive: boolean;
+    alertThreshold: number;
+    similarPatterns: PatternAlert[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface HistoricalEvent {
+  symbol: string;
+  event: string;
+  date: string;
+  outcome: 'positive' | 'negative';
+  priceChange: number;
+  duration: string;
+}
+
+export interface PatternAlert {
+  id: string;
+  pattern: string;
+  similarity: number;
+  alertMessage: string;
+  confidence: number;
+  createdAt: Date;
+}
+
+export interface StockSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+  type: string;
 }
