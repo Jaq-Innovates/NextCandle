@@ -46,12 +46,6 @@ const Header = ({ className }: HeaderProps) => {
               Analysis
             </Link>
             <Link
-              href="/portfolio"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Portfolio
-            </Link>
-            <Link
               href="/news"
               className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
@@ -65,9 +59,11 @@ const Header = ({ className }: HeaderProps) => {
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
+            <Link href="/profile">
+              <Button variant="ghost" size="icon" aria-label="User Profile">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
             <Button>Get Started</Button>
           </div>
 
@@ -103,18 +99,18 @@ const Header = ({ className }: HeaderProps) => {
                 Analysis
               </Link>
               <Link
-                href="/portfolio"
-                className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Portfolio
-              </Link>
-              <Link
                 href="/news"
                 className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 News
+              </Link>
+              <Link
+                href="/profile"
+                className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Profile
               </Link>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <ThemeToggle />

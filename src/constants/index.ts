@@ -14,8 +14,8 @@ export const ROUTES = {
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
   ANALYSIS: '/analysis',
-  PORTFOLIO: '/portfolio',
   NEWS: '/news',
+  PROFILE: '/profile',
   SETTINGS: '/settings',
 } as const;
 

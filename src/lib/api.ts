@@ -44,44 +44,33 @@ class ApiClient {
     return this.request(`/stocks/${symbol}/history?period=${period}`);
   }
 
-  async searchStocks(query: string) {
-    return this.request(`/stocks/search?q=${encodeURIComponent(query)}`);
+  async searchStocks(query: string, limit = 20) {
+    return this.request(`/stocks/search?q=${encodeURIComponent(query)}&limit=${limit}`);
   }
 
-  // Portfolio endpoints
-  async getPortfolio(userId: string) {
-    return this.request(`/portfolio/${userId}`);
+  async getStockSuggestions(query: string) {
+    return this.request(`/stocks/suggestions?q=${encodeURIComponent(query)}`);
   }
 
-  async addHolding(userId: string, holding: any) {
-    return this.request(`/portfolio/${userId}/holdings`, {
-      method: 'POST',
-      body: JSON.stringify(holding),
-    });
-  }
-
-  async updateHolding(userId: string, holdingId: string, updates: any) {
-    return this.request(`/portfolio/${userId}/holdings/${holdingId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  }
-
-  async removeHolding(userId: string, holdingId: string) {
-    return this.request(`/portfolio/${userId}/holdings/${holdingId}`, {
-      method: 'DELETE',
-    });
-  }
 
   // Analysis endpoints
   async getAnalysis(symbol: string) {
     return this.request(`/analysis/${symbol}`);
   }
 
-  async createAnalysis(symbol: string) {
-    return this.request(`/analysis/${symbol}`, {
+  async createAnalysis(symbol: string, timeFrame: string) {
+    return this.request(`/analysis`, {
       method: 'POST',
+      body: JSON.stringify({ symbol, timeFrame }),
     });
+  }
+
+  async getAnalysisHistory(userId: string) {
+    return this.request(`/analysis/history/${userId}`);
+  }
+
+  async getAnalysisResult(analysisId: string) {
+    return this.request(`/analysis/result/${analysisId}`);
   }
 
   // News endpoints
@@ -119,6 +108,33 @@ class ApiClient {
   async logout() {
     return this.request('/auth/logout', {
       method: 'POST',
+    });
+  }
+
+  // Comprehensive Analysis Methods
+  async createComprehensiveAnalysis(symbol: string, startDate: string, endDate: string) {
+    return this.request('/analysis/comprehensive', {
+      method: 'POST',
+      body: JSON.stringify({
+        symbol,
+        startDate,
+        endDate
+      }),
+    });
+  }
+
+  async getComprehensiveAnalysis(analysisId: string) {
+    return this.request(`/analysis/comprehensive/${analysisId}`);
+  }
+
+  async getMonitoringAlerts() {
+    return this.request('/analysis/monitoring/alerts');
+  }
+
+  async updateMonitoringSettings(analysisId: string, settings: any) {
+    return this.request(`/analysis/monitoring/${analysisId}`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
     });
   }
 }
