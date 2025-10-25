@@ -1,10 +1,16 @@
-import motor.motor_asyncio
-import os
+# database.py
+from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME")
 
-client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
-db = client.nextcandle  # this is your database name
+client = AsyncIOMotorClient(MONGO_URI)
+database = client[DB_NAME]
+
+# Collections
+users_collection = database["users"]
+stocks_collection = database["stocks"]

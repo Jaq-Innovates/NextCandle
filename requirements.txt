@@ -1,5 +1,7 @@
 fastapi
 uvicorn[standard]
+httpx
+pydantic
+motor
 pymongo
-python-dotenv
 supabase
