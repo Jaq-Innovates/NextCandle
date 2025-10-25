@@ -66,7 +66,7 @@ export const StockAutocomplete = ({
     const searchStocks = async () => {
       try {
         // Try to use real API first, fallback to mock data
-        const response = await apiClient.searchStocks(debouncedQuery, 20);
+        const response = await apiClient.searchStocks(debouncedQuery, 20) as { data: StockSearchResult[] };
         setFilteredStocks(response.data || []);
       } catch (error) {
         console.warn('API search failed, using mock data:', error);
@@ -125,12 +125,15 @@ export const StockAutocomplete = ({
         e.preventDefault();
         setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
         break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < filteredStocks.length) {
-          handleStockSelect(filteredStocks[selectedIndex]);
-        }
-        break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < filteredStocks.length) {
+            handleStockSelect(filteredStocks[selectedIndex]);
+          } else if (query.trim()) {
+            onStockSelection(query.toUpperCase(), query);
+            setIsOpen(false);
+          }
+          break;
       case 'Escape':
         setIsOpen(false);
         setSelectedIndex(-1);

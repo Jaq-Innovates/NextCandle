@@ -43,8 +43,19 @@ export default function AnalysisPage() {
       setError(null);
       console.log('Submitting analysis request:', formData);
       
-      // Create comprehensive analysis request
-      const response = await apiClient.createComprehensiveAnalysis(formData.symbol, formData.startDate, formData.endDate);
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol: formData.symbol,
+          companyName: formData.companyName,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+        }),
+      });
+
+    const data = await response.json();
+    console.log("✅ Data sent to Python:", data);
       
       console.log('Analysis submitted successfully:', response);
       
@@ -168,13 +179,20 @@ export default function AnalysisPage() {
               </div>
             )}
 
+            <p className="text-xs text-gray-500">
+              symbol: {formData.symbol || "none"}<br />
+              start: {formData.startDate || "none"}<br />
+              end: {formData.endDate || "none"}
+            </p>
+
             {/* Analyze Button */}
             <div className="pt-4 pb-4">
               <Button
                 type="submit"
                 size="lg"
                 className="w-full"
-                disabled={!isFormValid || isSubmitting}
+                //disabled={!isFormValid || isSubmitting}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
