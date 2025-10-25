@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Phone, Mail, MessageSquare, Save, ArrowLeft } from 'lucide-react';
+import { User, Phone, Mail, MessageSquare, Save, ArrowLeft, Eye, EyeOff, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProfileFormData {
@@ -11,6 +11,8 @@ interface ProfileFormData {
   lastName: string;
   phoneNumber: string;
   email: string;
+  password: string;
+  confirmPassword: string;
   smsConsent: boolean;
 }
 
@@ -20,11 +22,15 @@ export default function ProfilePage() {
     lastName: '',
     phoneNumber: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     smsConsent: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleInputChange = (field: keyof ProfileFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -53,6 +59,18 @@ export default function ProfilePage() {
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+
+    if (formData.password && !formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -218,6 +236,76 @@ export default function ProfilePage() {
                 {errors.email && (
                   <p id="email-error" className="text-sm text-red-600 dark:text-red-400">
                     {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Lock className="inline h-4 w-4 mr-1" />
+                  Password *
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      errors.password 
+                        ? 'border-red-500 dark:border-red-400' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Enter new password"
+                    aria-describedby={errors.password ? 'password-error' : undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p id="password-error" className="text-sm text-red-600 dark:text-red-400">
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Lock className="inline h-4 w-4 mr-1" />
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      errors.confirmPassword 
+                        ? 'border-red-500 dark:border-red-400' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="Confirm your password"
+                    aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p id="confirmPassword-error" className="text-sm text-red-600 dark:text-red-400">
+                    {errors.confirmPassword}
                   </p>
                 )}
               </div>

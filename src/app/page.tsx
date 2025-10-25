@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, BarChart3, Brain, Shield, Zap, Users } from 'lucide-react';
+import { TrendingUp, BarChart3, Brain } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -15,8 +15,7 @@ export default function Home() {
               <span className="text-blue-600 dark:text-blue-400"> Financial Analysis</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Enough with uncertain decision making, NextCandle's advanced AI that analyzes 
-              historical trends, market sentiment, and real-time data guides your investment decisions.
+              Stop trading with uncertainty, use historical data to AI with comprehensive market analysis to give you the edge you need in today's volatile markets.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/analysis">
@@ -24,9 +23,6 @@ export default function Home() {
                   Start Free Analysis
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                Watch Demo
-              </Button>
             </div>
           </div>
         </div>
@@ -53,8 +49,7 @@ export default function Home() {
                 </div>
                 <CardTitle className="text-gray-900 dark:text-white">AI-Powered Insights</CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-300">
-                  Advanced machine learning algorithms analyze market patterns and sentiment 
-                  to provide actionable investment recommendations.
+                  AI to analyze market patterns and sentiment to provide actionable investment recommendations.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -85,44 +80,6 @@ export default function Home() {
               </CardHeader>
             </Card>
 
-            <Card className="p-6 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <CardTitle className="text-gray-900 dark:text-white">Risk Management</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-300">
-                  Advanced risk assessment tools help you understand potential 
-                  downsides and optimize your investment strategy.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="h-6 w-6 text-red-600 dark:text-red-400" />
-                </div>
-                <CardTitle className="text-gray-900 dark:text-white">Lightning Fast</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-300">
-                  Get instant analysis and recommendations with our optimized 
-                  infrastructure designed for speed and reliability.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <CardTitle className="text-gray-900 dark:text-white">Community Driven</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-300">
-                  Join a community of smart investors sharing insights, 
-                  strategies, and market analysis to learn and grow together.
-                </CardDescription>
-              </CardHeader>
-            </Card>
           </div>
         </div>
       </section>

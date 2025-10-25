@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { DateRangeSelector } from '@/components/analysis/DateRangeSelector';
 import { StockAutocomplete } from '@/components/analysis/StockAutocomplete';
 import { AnalysisFormData } from '@/types';
@@ -17,6 +18,7 @@ export default function AnalysisPage() {
     companyName: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
 
@@ -38,10 +40,22 @@ export default function AnalysisPage() {
     }
 
     setIsSubmitting(true);
+    setAnalysisProgress(0);
     
     try {
       setError(null);
       console.log('Submitting analysis request:', formData);
+      
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setAnalysisProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 200);
       
       // Create comprehensive analysis request
       const response = await apiClient.createComprehensiveAnalysis(formData.symbol, formData.startDate, formData.endDate);
@@ -112,7 +126,11 @@ export default function AnalysisPage() {
       console.error('Error submitting analysis:', error);
       setError('Failed to start analysis. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setAnalysisProgress(100);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setAnalysisProgress(0);
+      }, 500);
     }
   };
 
@@ -169,7 +187,7 @@ export default function AnalysisPage() {
             )}
 
             {/* Analyze Button */}
-            <div className="pt-4 pb-4">
+            <div className="pt-4 pb-4 space-y-3">
               <Button
                 type="submit"
                 size="lg"
@@ -188,6 +206,16 @@ export default function AnalysisPage() {
                   </div>
                 )}
               </Button>
+              
+              {/* Progress Bar */}
+              {isSubmitting && (
+                <div className="space-y-2">
+                  <Progress value={analysisProgress} className="h-2" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Processing your analysis...
+                  </p>
+                </div>
+              )}
             </div>
           </form>
         </div>

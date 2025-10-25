@@ -44,16 +44,6 @@ const Footer = () => {
                   Features
                 </Link>
               </li>
-              <li>
-                <Link href="/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="/api" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  API
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -64,18 +54,8 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/help" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Help Center
-                </Link>
-              </li>
-              <li>
                 <Link href="/contact" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                   Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/status" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Status
                 </Link>
               </li>
             </ul>
