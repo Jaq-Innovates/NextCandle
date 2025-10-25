@@ -15,8 +15,8 @@ export default function Home() {
               <span className="text-blue-600 dark:text-blue-400"> Financial Analysis</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Make smarter investment decisions with NextCandle's advanced AI that analyzes 
-              historical trends, market sentiment, and real-time data to guide your portfolio.
+              Enough with uncertain decision making, NextCandle's advanced AI that analyzes 
+              historical trends, market sentiment, and real-time data guides your portfolio.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-lg px-8 py-3">
