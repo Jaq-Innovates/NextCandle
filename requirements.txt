@@ -1,3 +1,6 @@
+google-generativeai
+python-dotenv
+flask
 requests
 feedparser
 beautifulsoup4
