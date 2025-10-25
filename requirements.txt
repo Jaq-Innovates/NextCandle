@@ -1,0 +1,1 @@
+requirements.txt lists the Python packages needed for your analyzer to run, allowing teammates to install dependencies easily.
