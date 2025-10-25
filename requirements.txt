@@ -5,3 +5,8 @@ lxml
 pandas
 yfinance
 
+fastapi
+uvicorn[standard]
+pymongo
+python-dotenv
+supabase
