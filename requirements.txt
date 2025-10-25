@@ -13,3 +13,5 @@ uvicorn[standard]
 pymongo
 python-dotenv
 supabase
+
+tailwindcss
