@@ -9,7 +9,12 @@ NextCandle - Prior Window Scraper (Finnhub-only)
 - Save:
     data/<ticker>_<start>_<end>_summary.json
 """
+from pathlib import Path
+from dotenv import load_dotenv
 
+# load the .env that sits in the same folder as this script, and override any existing vars
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=True)
+import math
 import argparse, json, os, re, time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
@@ -17,10 +22,11 @@ import requests, yfinance as yf
 from bs4 import BeautifulSoup
 
 # ---------- config ----------
-LOOKBACK_DAYS_DEFAULT = 31
-DATA_DIR = "data"
+LOOKBACK_DAYS_DEFAULT = 1
+DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
 UA = {"User-Agent": "Mozilla/5.0 (NextCandle/1.0)"}
-os.makedirs(DATA_DIR, exist_ok=True)
+# os.makedirs(DATA_DIR, exist_ok=True)
 
 # ---------- utilities ----------
 
@@ -98,46 +104,143 @@ def finnhub_company_news(ticker: str, start_dt: datetime, lookback_days: int) ->
     Fetch company news from Finnhub for the prior window:
     [start_dt - lookback_days, start_dt)
     """
-    api_key = "d3u7t89r01qvr0dlsiegd3u7t89r01qvr0dlsif0"  # your key here
+    api_key = (os.getenv("finn_key") or "").strip()  # trim hidden whitespace/newlines
+    print(f"[DEBUG] finn_key len={len(api_key)}  mask={api_key[:4]}...{api_key[-4:] if len(api_key)>=8 else ''}")
 
     if not api_key:
-        print("[WARN] FINNHUB_API_KEY not set; skipping Finnhub fetch.")
+        print("[WARN] finn_key not set; skipping Finnhub fetch.")
         return []
 
+    symbol = (ticker or "").upper()
     from_date = (start_dt - timedelta(days=lookback_days)).date().isoformat()
     to_date   = (start_dt - timedelta(days=1)).date().isoformat()
 
     url = "https://finnhub.io/api/v1/company-news"
-    params = {
-        "symbol": ticker, 
-        "from": from_date, 
-        "to": to_date, 
-        "token": api_key
-    }
+    params = {"symbol": symbol, "from": from_date, "to": to_date, "token": api_key}
 
     try:
         r = requests.get(url, params=params, headers=UA, timeout=15)
-        r.raise_for_status()
-        data = r.json() or []
+        if r.status_code in (429, 502, 503, 504):
+            time.sleep(1.5)
+            print(f"[DEBUG] hitting {url} with params={params}")
+
+            r = requests.get(url, params=params, headers=UA, timeout=15)
+
+        raw_text = r.text[:200]
+        try:
+            r.raise_for_status()
+        except Exception as e:
+            print(f"[WARN] Finnhub HTTP error {r.status_code}: {raw_text}")
+            return []
+
+        data = r.json()
+        if isinstance(data, dict):
+            print(f"[WARN] Finnhub returned error JSON: {data}")
+            return []
+        if not isinstance(data, list):
+            print(f"[WARN] Unexpected Finnhub payload type: {type(data)}; body={raw_text}")
+            return []
+
     except Exception as e:
         print(f"[WARN] Finnhub request failed: {e}")
         return []
 
-    out = []
+    out: List[Dict] = []
     for item in data:
-        ts = None
+        ts_iso = None
         try:
-            ts = datetime.fromtimestamp(int(item.get("datetime", 0)), tz=timezone.utc).isoformat()
+            ts_val = float(item.get("datetime", 0))
+            if ts_val > 0:
+                ts_iso = datetime.fromtimestamp(ts_val, tz=timezone.utc).isoformat()
         except Exception:
-            ts = None
+            ts_iso = None
+
         out.append({
             "title": item.get("headline"),
-            "url": item.get("url"),
-            "published_at": ts,
+            "url": item.get("url") or "",
+            "published_at": ts_iso,
             "source": item.get("source"),
             "text": item.get("summary") or ""
         })
     return out
+def finnhub_company_news_limited(
+    ticker: str,
+    start_dt: datetime,
+    lookback_days: int,
+    max_articles: int = 100,
+    chunk_days: int = 3,
+) -> List[Dict]:
+    """
+    Fetch up to `max_articles` articles spread across the prior window.
+    We chunk the window to avoid Finnhub per-request caps and to enforce even coverage.
+    """
+    lookback_days = min(30, lookback_days)  # free-tier safety
+    begin = start_dt - timedelta(days=lookback_days)
+    end = start_dt
+
+    total_days = (end - begin).days
+    if total_days <= 0:
+        return []
+
+    num_chunks = max(1, math.ceil(total_days / chunk_days))
+    # Even allocation per chunk (distribute remainder to the most recent chunks)
+    base = max_articles // num_chunks
+    rem = max_articles % num_chunks
+
+    seen = set()
+    collected: List[Dict] = []
+
+    # Walk from most recent chunk backward (prioritize recent news)
+    cursor_end = end
+    for i in range(num_chunks):
+        if len(collected) >= max_articles:
+            break
+
+        cursor_start = max(begin, cursor_end - timedelta(days=chunk_days))
+
+        # Allocate per-chunk budget (recent chunks get the remainder first)
+        # i=0 is most recent chunk
+        alloc = base + (1 if i < rem else 0)
+        if alloc <= 0:
+            cursor_end = cursor_start
+            continue
+
+        # Reuse your existing per-window fetch (end-exclusive semantics already handled)
+        part = finnhub_company_news(ticker, cursor_end, (cursor_end - cursor_start).days)
+
+        # Sort inside chunk oldest->newest so we pick evenly later
+        part = sorted(
+            part,
+            key=lambda x: x.get("published_at") or "",
+        )
+
+        # Evenly sample up to `alloc` from this chunk
+        if len(part) > alloc and alloc > 1:
+            picks = []
+            for k in range(alloc):
+                idx = int(round(k * (len(part) - 1) / (alloc - 1)))
+                picks.append(part[idx])
+        else:
+            picks = part[:alloc]
+
+        # Dedup and add
+        for e in picks:
+            if len(collected) >= max_articles:
+                break
+            url = canonical_url(e.get("url") or "")
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            collected.append(e)
+
+        cursor_end = cursor_start  # move to next (older) chunk
+
+    # Final ordering: oldest->newest (change if you prefer newest-first)
+    collected.sort(key=lambda x: x.get("published_at") or "")
+    return collected
+
+
+
 
 # ---------- main ----------
 
@@ -149,6 +252,11 @@ def main():
     ap.add_argument("--lookback", type=int, default=LOOKBACK_DAYS_DEFAULT)
     ap.add_argument("--fetch-text", action="store_true", help="Fetch and store article text (slower).")
     args = ap.parse_args()
+    # Enforce Finnhub's 30-day limit
+    if args.lookback > 30:
+        print("[INFO] Finnhub free tier only supports 30 days of news — limiting lookback to 30.")
+        args.lookback = 30
+
 
     print("[DEBUG] args:", args)
 
@@ -180,7 +288,7 @@ def main():
 
     print(f"[NEWS] Fetching prior {args.lookback} days of Finnhub news for {ticker} …")
 
-    entries = finnhub_company_news(ticker, start_dt, args.lookback)
+    entries = finnhub_company_news_limited(ticker, start_dt, args.lookback, max_articles=100, chunk_days=3)
     print(f"[NEWS] Finnhub returned {len(entries)} items (before filtering)")
 
     seen = set()
