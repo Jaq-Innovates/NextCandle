@@ -1,10 +1,11 @@
 import asyncio
+from datetime import datetime, timezone
 from bson import ObjectId
 from database import db
 from database import MONGO_URI
 from main import StockData
 from main import app
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 import certifi
 import uvicorn
 from fastapi import FastAPI, Request
@@ -145,6 +146,53 @@ async def search_stocks(q: str = Query(..., min_length=1), limit: int = 20):
     print("🚨 Yahoo unreachable, returning fallback data")
     return fallback
 
+@app.get("/analysis/stats")
+async def get_analysis_stats():
+    try:
+        total_count = collection.count_documents({})
+        favorites_count = collection.count_documents({"favorited": True})
+
+        return {
+            "totalAnalyses": total_count,
+            "favoriteStocks": favorites_count
+        }
+    except Exception as e:
+        print("❌ ERROR fetching analysis stats:", e)
+        return {"error": str(e)}
+
+@app.get("/analysis/recent")
+async def get_recent_analyses(limit: int = 10):
+    try:
+        cursor = collection.find().sort("created_at", DESCENDING).limit(limit)
+        results = []
+        for doc in cursor:
+            prediction = (doc.get("prediction") or "").lower()
+
+            # ✅ Map prediction → recommendation
+            if prediction == "increase":
+                recommendation = "buy"
+            elif prediction == "decrease":
+                recommendation = "sell"
+            else:
+                recommendation = "hold"  # fallback if prediction missing or unclear
+
+
+            results.append({
+                "id": str(doc["_id"]),
+                "symbol": doc.get("ticker"),
+                "companyName": doc.get("company"),
+                "summary": doc.get("summary"),
+                "prediction": doc.get("prediction"),
+                "recommendation": recommendation,  # ✅ now derived from prediction
+                "keywords": doc.get("keywords"),
+                "isFavorite": doc.get("favorited", False),
+                "analysisDate": doc.get("created_at")
+            })
+        return results
+    except Exception as e:
+        print("❌ ERROR fetching recent analyses:", e)
+        return {"error": str(e)}
+
 @app.post("/analyze")
 async def analyze(request: AnalysisRequest):
     try:
@@ -172,9 +220,33 @@ async def analyze(request: AnalysisRequest):
             "net_gain": result_data.get("net_gain"),
             "label": result_data.get("label"),
             "prediction": analysis_output.get("prediction"),
+            "created_at": datetime.now(timezone.utc).isoformat(),  # ISO 8601 UTC timestamp
+            "favorited": False,  # all start as not favorited
             "summary": analysis_output.get("summary"),
             "keywords": analysis_output.get("keywords"),
             "articles": result_data.get("articles"),
+        }
+
+        mongo_doc["summary"] = {
+            "recommendation": analysis_output.get("prediction", "hold"),
+            "confidence": 85,  # static or model-based
+            "explanation": analysis_output.get("summary", ""),
+            "keyFactors": analysis_output.get("keywords", []),
+        }
+
+        mongo_doc["analysisPeriod"] = {
+            "startDate": result_data.get("start_date"),
+            "endDate": result_data.get("end_date"),
+        }
+
+        mongo_doc["webScrapingResults"] = {
+            "totalArticles": len(result_data.get("articles", [])),
+            "sentimentTrend": result_data.get("label", "neutral"),
+            "keyTopics": analysis_output.get("keywords", []),
+        }
+
+        mongo_doc["trendAnalysis"] = {
+            "similarHistoricalEvents": []  # can fill later if you add pattern matching
         }
 
         # --- 4️⃣ Save to MongoDB ---
