@@ -8,7 +8,6 @@ import { DateRangeSelector } from '@/components/analysis/DateRangeSelector';
 import { StockAutocomplete } from '@/components/analysis/StockAutocomplete';
 import { AnalysisFormData } from '@/types';
 import { Search, TrendingUp, Calendar, BarChart3, Play, Loader2 } from 'lucide-react';
-import { apiClient } from '@/lib/api';
 
 export default function AnalysisPage() {
   const [formData, setFormData] = useState<AnalysisFormData>({
@@ -57,62 +56,51 @@ export default function AnalysisPage() {
         });
       }, 200);
       
-      // Create comprehensive analysis request
-      const response = await apiClient.createComprehensiveAnalysis(formData.symbol, formData.startDate, formData.endDate);
-      
-      console.log('Analysis submitted successfully:', response);
-      
-      // Set mock comprehensive analysis results
-      setAnalysisResults({
-        symbol: formData.symbol,
-        companyName: formData.companyName,
-        analysisPeriod: {
+      // Call our new API endpoint
+      const response = await fetch('/api/analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          symbol: formData.symbol,
           startDate: formData.startDate,
           endDate: formData.endDate
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Analysis request failed');
+      }
+      
+      const result = await response.json();
+      console.log('Analysis completed successfully:', result);
+      
+      // Use the actual result from the API
+      setAnalysisResults({
+        symbol: result.symbol,
+        companyName: formData.companyName,
+        analysisPeriod: {
+          startDate: result.startDate,
+          endDate: result.endDate
         },
         webScrapingResults: {
-          totalArticles: 47,
-          sources: ['Reuters', 'Bloomberg', 'CNBC', 'MarketWatch', 'Yahoo Finance'],
-          keyTopics: ['earnings beat', 'AI integration', 'market expansion', 'regulatory approval'],
-          sentimentTrend: 'positive'
+          totalArticles: result.articles.length,
+          sources: [...new Set(result.articles.map(article => article.source))],
+          keyTopics: result.analysis.keyTopics,
+          sentimentTrend: result.analysis.sentiment
         },
         trendAnalysis: {
-          identifiedPatterns: [
-            'Consistent earnings growth pattern',
-            'AI technology adoption trend',
-            'Market expansion announcements'
-          ],
-          keyEvents: [
-            'Q3 earnings exceeded expectations by 15%',
-            'Announced AI partnership with major tech company',
-            'FDA approval for new product line'
-          ],
-          marketReactions: [
-            'Stock price increased 12% following earnings announcement',
-            'Trading volume spiked 300% on partnership news',
-            'Analyst upgrades from 3 firms'
-          ],
-          similarHistoricalEvents: [
-            {
-              symbol: 'NVDA',
-              event: 'AI partnership announcement',
-              date: '2023-03-15',
-              outcome: 'positive',
-              priceChange: 18.5,
-              duration: '2 weeks'
-            }
-          ]
+          identifiedPatterns: result.analysis.keyTopics,
+          keyEvents: result.articles.map(article => article.title),
+          marketReactions: result.articles.map(article => `${article.sentiment} sentiment from ${article.source}`),
+          similarHistoricalEvents: []
         },
         summary: {
-          explanation: `${formData.companyName} has shown strong performance during the selected period, driven primarily by better-than-expected earnings and strategic AI partnerships. The stock's upward movement follows a pattern similar to NVIDIA's AI-driven growth in early 2023. Key factors include consistent revenue growth, expanding market presence, and positive analyst sentiment.`,
-          keyFactors: [
-            'Earnings exceeded expectations by 15%',
-            'Strategic AI partnerships driving growth',
-            'Strong analyst sentiment and upgrades',
-            'Market expansion into new sectors'
-          ],
-          confidence: 87,
-          recommendation: 'buy',
+          explanation: `Analysis of ${result.symbol} from ${result.startDate} to ${result.endDate} shows ${result.analysis.sentiment} sentiment with ${result.analysis.confidence}% confidence. Key topics include ${result.analysis.keyTopics.join(', ')}.`,
+          keyFactors: result.analysis.keyTopics,
+          confidence: result.analysis.confidence,
+          recommendation: result.analysis.sentiment === 'positive' ? 'buy' : 'hold',
           riskLevel: 'medium'
         },
         monitoring: {
