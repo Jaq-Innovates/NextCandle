@@ -205,10 +205,10 @@ export default function AnalysisPage() {
         </div>
 
         {/* Right Panel - Analysis Results */}
-        <div className="flex-1 p-4 lg:p-6 min-h-0">
-          <div className="h-full">
+        <div className="flex-1 p-4 lg:p-6 min-h-0 overflow-y-auto">
+          <div className="min-h-full pb-8">
             {analysisResults ? (
-              <Card className="h-full">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-blue-600" />
@@ -218,7 +218,7 @@ export default function AnalysisPage() {
                     {analysisResults.companyName} ({analysisResults.symbol}) • {analysisResults.analysisPeriod.startDate} to {analysisResults.analysisPeriod.endDate}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 pb-8">
                   {/* Recommendation */}
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <div className="flex items-center justify-between">

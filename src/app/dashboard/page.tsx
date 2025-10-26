@@ -22,7 +22,7 @@ interface UserAnalysis {
   companyName: string;
   analysisDate: string;
   recommendation: 'buy' | 'sell' | 'hold';
-  confidence: number;
+  confidence: 67;
   summary: string;
   keyFactors: string[];
   isFavorite: boolean;
@@ -56,96 +56,43 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'recent' | 'favorites'>('recent');
 
-  // Mock data for demonstration
   useEffect(() => {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        // Mock recent analyses
-        const mockAnalyses: UserAnalysis[] = [
-          {
-            id: '1',
-            symbol: 'AAPL',
-            companyName: 'Apple Inc.',
-            analysisDate: '2024-01-15T10:30:00Z',
-            recommendation: 'buy',
-            confidence: 87,
-            summary: 'Strong earnings growth and AI integration driving future value',
-            keyFactors: ['Earnings beat expectations', 'AI partnerships', 'Strong cash flow'],
-            isFavorite: true
-          },
-          {
-            id: '2',
-            symbol: 'TSLA',
-            companyName: 'Tesla Inc.',
-            analysisDate: '2024-01-14T14:20:00Z',
-            recommendation: 'hold',
-            confidence: 72,
-            summary: 'Production concerns offset by strong demand and innovation',
-            keyFactors: ['Production delays', 'Strong demand', 'Innovation pipeline'],
-            isFavorite: false
-          },
-          {
-            id: '3',
-            symbol: 'NVDA',
-            companyName: 'NVIDIA Corporation',
-            analysisDate: '2024-01-13T09:15:00Z',
-            recommendation: 'buy',
-            confidence: 94,
-            summary: 'AI dominance continues with new chip announcements',
-            keyFactors: ['AI leadership', 'New product launches', 'Market expansion'],
-            isFavorite: true
-          }
-        ];
-
-        // Mock favorites
-        const mockFavorites: FavoriteStock[] = [
-          {
-            id: '1',
-            symbol: 'AAPL',
-            companyName: 'Apple Inc.',
-            addedDate: '2024-01-10T00:00:00Z',
-            analysisCount: 5,
-            lastAnalyzed: '2024-01-15T10:30:00Z'
-          },
-          {
-            id: '2',
-            symbol: 'NVDA',
-            companyName: 'NVIDIA Corporation',
-            addedDate: '2024-01-08T00:00:00Z',
-            analysisCount: 3,
-            lastAnalyzed: '2024-01-13T09:15:00Z'
-          },
-          {
-            id: '3',
-            symbol: 'MSFT',
-            companyName: 'Microsoft Corporation',
-            addedDate: '2024-01-05T00:00:00Z',
-            analysisCount: 2,
-            lastAnalyzed: '2024-01-12T16:45:00Z'
-          }
-        ];
-
-        // Mock stats
-        const mockStats: DashboardStats = {
-          totalAnalyses: 12,
-          favoriteStocks: 3,
-          averageConfidence: 84,
-          mostAnalyzedStock: 'AAPL'
-        };
-
-        setAnalyses(mockAnalyses);
+        // Temporary mock data (you can remove once backend endpoints for analyses are live)
+        //const mockAnalyses: UserAnalysis[] = [/* ... keep your mock analyses here ... */];
+        const mockFavorites: UserFavorite[] = [/* ... keep your mock favorites here ... */];
+  
+        //setAnalyses(mockAnalyses);
         setFavorites(mockFavorites);
-        setStats(mockStats);
+
+        // ✅ Fetch actual recent analyses
+        const analysesRes = await fetch("http://localhost:8000/analysis/recent");
+        const recentAnalyses = await analysesRes.json();
+        setAnalyses(recentAnalyses);
+  
+        // ✅ Fetch live stats from backend
+        const res = await fetch("http://localhost:8000/analysis/stats");
+        const statsData = await res.json();
+  
+        // ✅ Combine live stats with your existing structure
+        setStats({
+          totalAnalyses: statsData.totalAnalyses || 0,
+          favoriteStocks: statsData.favoriteStocks || 0,
+          averageConfidence: 84,        // keep mock or compute later
+          mostAnalyzedStock: 'AAPL',    // placeholder for now
+        });
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     loadDashboardData();
   }, []);
+  
 
   const handleToggleFavorite = async (analysisId: string, symbol: string) => {
     try {
@@ -369,7 +316,7 @@ export default function DashboardPage() {
                           </div>
                           
                           <div className="flex flex-wrap gap-2">
-                            {analysis.keyFactors.map((factor, index) => (
+                            {(analysis.keyFactors || []).map((factor, index) => (
                               <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded-full text-gray-600 dark:text-gray-300">
                                 {factor}
                               </span>
