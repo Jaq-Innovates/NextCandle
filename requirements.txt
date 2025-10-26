@@ -1,0 +1,17 @@
+google-generativeai
+python-dotenv
+flask
+requests
+feedparser
+beautifulsoup4
+lxml
+pandas
+yfinance
+
+fastapi
+uvicorn[standard]
+pymongo
+python-dotenv
+supabase
+
+tailwindcss
