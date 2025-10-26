@@ -115,6 +115,7 @@ export default function DashboardPage() {
         setFavorites(prev => prev.filter(fav => fav.symbol !== symbol));
       } else {
         // Add to favorites
+        /*
         const newFavorite: FavoriteStock = {
           id: Date.now().toString(),
           symbol,
@@ -124,6 +125,7 @@ export default function DashboardPage() {
           lastAnalyzed: analysis?.analysisDate
         };
         setFavorites(prev => [...prev, newFavorite]);
+        */
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
