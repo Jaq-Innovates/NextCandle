@@ -179,20 +179,14 @@ export default function AnalysisPage() {
               </div>
             )}
 
-            <p className="text-xs text-gray-500">
-              symbol: {formData.symbol || "none"}<br />
-              start: {formData.startDate || "none"}<br />
-              end: {formData.endDate || "none"}
-            </p>
-
             {/* Analyze Button */}
             <div className="pt-4 pb-4">
               <Button
                 type="submit"
                 size="lg"
                 className="w-full"
-                //disabled={!isFormValid || isSubmitting}
-                disabled={isSubmitting}
+                disabled={!isFormValid || isSubmitting}
+                //disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">

@@ -55,6 +55,13 @@ export const StockAutocomplete = ({
 
   // Filter stocks based on search query
   useEffect(() => {
+    // 🛑 Don’t re-search if a stock is already selected
+    if (selectedSymbol) {
+      setFilteredStocks([]);
+      setIsOpen(false);
+      return;
+    }
+  
     if (!debouncedQuery.trim()) {
       setFilteredStocks([]);
       setIsLoading(false);
@@ -66,8 +73,13 @@ export const StockAutocomplete = ({
     const searchStocks = async () => {
       try {
         // Try to use real API first, fallback to mock data
-        const response = await apiClient.searchStocks(debouncedQuery, 20) as { data: StockSearchResult[] };
-        setFilteredStocks(response.data || []);
+        const response = await apiClient.searchStocks(debouncedQuery, 20);
+        console.log("📦 API Response:", response);
+
+        setFilteredStocks(response); // ✅ already StockSearchResult[]
+        setIsOpen(true);
+
+
       } catch (error) {
         console.warn('API search failed, using mock data:', error);
         // Fallback to mock data
@@ -148,13 +160,13 @@ export const StockAutocomplete = ({
   };
 
   const handleInputBlur = (e: React.FocusEvent) => {
-    // Don't close if clicking on dropdown
-    if (dropdownRef.current?.contains(e.relatedTarget as Node)) {
-      return;
-    }
-    setIsOpen(false);
-    setSelectedIndex(-1);
-  };
+    setTimeout(() => {
+      if (!dropdownRef.current?.contains(e.relatedTarget as Node)) {
+        setIsOpen(false);
+        setSelectedIndex(-1);
+      }
+    }, 150);
+  };  
 
   return (
     <div className="relative">
@@ -232,7 +244,7 @@ export const StockAutocomplete = ({
                     ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
-                onClick={() => handleStockSelect(stock)}
+                onMouseDown={() => handleStockSelect(stock)}
                 role="option"
                 aria-selected={index === selectedIndex}
               >

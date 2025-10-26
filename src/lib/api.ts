@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/constants';
+import { StockSearchResult } from "@/types";
 
 class ApiClient {
   private baseURL: string;
@@ -44,8 +45,8 @@ class ApiClient {
     return this.request(`/stocks/${symbol}/history?period=${period}`);
   }
 
-  async searchStocks(query: string, limit = 20) {
-    return this.request(`/stocks/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+  async searchStocks(query: string, limit = 20): Promise<StockSearchResult[]> {
+    return this.request<StockSearchResult[]>(`/stocks/search?q=${encodeURIComponent(query)}&limit=${limit}`);
   }
 
   async getStockSuggestions(query: string) {
