@@ -227,6 +227,28 @@ async def analyze(request: AnalysisRequest):
             "articles": result_data.get("articles"),
         }
 
+        mongo_doc["summary"] = {
+            "recommendation": analysis_output.get("prediction", "hold"),
+            "confidence": 85,  # static or model-based
+            "explanation": analysis_output.get("summary", ""),
+            "keyFactors": analysis_output.get("keywords", []),
+        }
+
+        mongo_doc["analysisPeriod"] = {
+            "startDate": result_data.get("start_date"),
+            "endDate": result_data.get("end_date"),
+        }
+
+        mongo_doc["webScrapingResults"] = {
+            "totalArticles": len(result_data.get("articles", [])),
+            "sentimentTrend": result_data.get("label", "neutral"),
+            "keyTopics": analysis_output.get("keywords", []),
+        }
+
+        mongo_doc["trendAnalysis"] = {
+            "similarHistoricalEvents": []  # can fill later if you add pattern matching
+        }
+
         # --- 4️⃣ Save to MongoDB ---
         insert_result = collection.insert_one(mongo_doc)
         mongo_doc["_id"] = str(insert_result.inserted_id)

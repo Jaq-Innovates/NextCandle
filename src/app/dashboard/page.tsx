@@ -23,7 +23,12 @@ interface UserAnalysis {
   analysisDate: string;
   recommendation: 'buy' | 'sell' | 'hold';
   confidence: 67;
-  summary: string;
+  summary: {
+    recommendation?: string;
+    confidence?: number;
+    explanation?: string;
+    keyFactors?: string[];
+  };
   keyFactors: string[];
   isFavorite: boolean;
 }
@@ -300,7 +305,7 @@ export default function DashboardPage() {
                           </div>
                           
                           <p className="text-gray-600 dark:text-gray-300 mb-3">
-                            {analysis.summary}
+                            {analysis.summary.explanation || "No summary available."}
                           </p>
                           
                           <div className="flex items-center gap-4 mb-3">

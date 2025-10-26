@@ -53,71 +53,15 @@ export default function AnalysisPage() {
           endDate: formData.endDate,
         }),
       });
+      
+      const data = await response.json();
+      console.log("✅ Data received from backend:", data);
 
-    const data = await response.json();
-    console.log("✅ Data sent to Python:", data);
-      
-      console.log('Analysis submitted successfully:', response);
-      
-      // Set mock comprehensive analysis results
-      setAnalysisResults({
-        symbol: formData.symbol,
-        companyName: formData.companyName,
-        analysisPeriod: {
-          startDate: formData.startDate,
-          endDate: formData.endDate
-        },
-        webScrapingResults: {
-          totalArticles: 47,
-          sources: ['Reuters', 'Bloomberg', 'CNBC', 'MarketWatch', 'Yahoo Finance'],
-          keyTopics: ['earnings beat', 'AI integration', 'market expansion', 'regulatory approval'],
-          sentimentTrend: 'positive'
-        },
-        trendAnalysis: {
-          identifiedPatterns: [
-            'Consistent earnings growth pattern',
-            'AI technology adoption trend',
-            'Market expansion announcements'
-          ],
-          keyEvents: [
-            'Q3 earnings exceeded expectations by 15%',
-            'Announced AI partnership with major tech company',
-            'FDA approval for new product line'
-          ],
-          marketReactions: [
-            'Stock price increased 12% following earnings announcement',
-            'Trading volume spiked 300% on partnership news',
-            'Analyst upgrades from 3 firms'
-          ],
-          similarHistoricalEvents: [
-            {
-              symbol: 'NVDA',
-              event: 'AI partnership announcement',
-              date: '2023-03-15',
-              outcome: 'positive',
-              priceChange: 18.5,
-              duration: '2 weeks'
-            }
-          ]
-        },
-        summary: {
-          explanation: `${formData.companyName} has shown strong performance during the selected period, driven primarily by better-than-expected earnings and strategic AI partnerships. The stock's upward movement follows a pattern similar to NVIDIA's AI-driven growth in early 2023. Key factors include consistent revenue growth, expanding market presence, and positive analyst sentiment.`,
-          keyFactors: [
-            'Earnings exceeded expectations by 15%',
-            'Strategic AI partnerships driving growth',
-            'Strong analyst sentiment and upgrades',
-            'Market expansion into new sectors'
-          ],
-          confidence: 87,
-          recommendation: 'buy',
-          riskLevel: 'medium'
-        },
-        monitoring: {
-          isActive: true,
-          alertThreshold: 75,
-          similarPatterns: []
-        }
-      });
+      if (data.status === "success") {
+        setAnalysisResults(data.data); // this now contains the real results from Python
+      } else {
+        setError("Failed to analyze stock. Please try again.");
+      }
       
     } catch (error) {
       console.error('Error submitting analysis:', error);
