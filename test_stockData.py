@@ -13,6 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Query
 import requests
 import time
+from scripts import scrape_prior_window
+import json
+from pathlib import Path
+from analyzer import analyze_articles
+
 
 collection = db.stocks  # matches your FastAPI route collection name
 
@@ -97,7 +102,7 @@ async def search_stocks(q: str = Query(..., min_length=1), limit: int = 20):
         {"symbol": "ADBE", "name": "Adobe Inc.", "exchange": "NASDAQ", "type": "EQUITY"},
         {"symbol": "CRM", "name": "Salesforce Inc.", "exchange": "NYSE", "type": "EQUITY"},
         {"symbol": "INTC", "name": "Intel Corporation", "exchange": "NASDAQ", "type": "EQUITY"}
-        
+
     ]
 
     for attempt in range(3):
@@ -144,20 +149,54 @@ async def search_stocks(q: str = Query(..., min_length=1), limit: int = 20):
 async def analyze(request: AnalysisRequest):
     try:
         data = request.model_dump()
-        ##data["timestamp"] = datetime.utcnow()
         print("📩 Received data from frontend:", data)
 
-        result = collection.insert_one(data)
+        # Run the scraper synchronously and get its JSON result
+        result_data = scrape_prior_window.run_scraper(
+            data["symbol"],
+            data["startDate"],
+            data["endDate"]
+        )
 
+        print("🧠 Scraper finished. Now running Gemini analyzer...")
+
+        # --- 2️⃣ Analyze result_data with Gemini ---
+        analysis_output = analyze_articles(result_data)
+
+        # --- 3️⃣ Build final structured Mongo document ---
+        mongo_doc = {
+            "ticker": result_data.get("ticker"),
+            "company": result_data.get("company"),
+            "start_date": result_data.get("start_date"),
+            "end_date": result_data.get("end_date"),
+            "net_gain": result_data.get("net_gain"),
+            "label": result_data.get("label"),
+            "prediction": analysis_output.get("prediction"),
+            "summary": analysis_output.get("summary"),
+            "keywords": analysis_output.get("keywords"),
+            "articles": result_data.get("articles"),
+        }
+
+        # --- 4️⃣ Save to MongoDB ---
+        insert_result = collection.insert_one(mongo_doc)
+        mongo_doc["_id"] = str(insert_result.inserted_id)
+
+        # --- 5️⃣ (Optional) Save to local file for debugging ---
+        out_path = Path("last_result.json")
+        with out_path.open("w", encoding="utf-8") as f:
+            json.dump(mongo_doc, f, indent=2, ensure_ascii=False)
+
+        # --- 6️⃣ Return response ---
         return {
             "status": "success",
-            "inserted_id": str(result.inserted_id)
+            "data": mongo_doc,
+            "inserted_id": str(insert_result.inserted_id),
         }
 
     except Exception as e:
         import traceback
-        print("❌ ERROR inserting into MongoDB:", e)
         traceback.print_exc()
+        print("❌ ERROR running analyzer:", e)
         return {"error": str(e)}
 
 if __name__ == "__main__":

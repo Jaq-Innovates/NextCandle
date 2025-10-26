@@ -99,46 +99,37 @@ def canonical_url(u: str) -> str:
     u = re.sub(r"&+$", "", u)
     return u
 
-def finnhub_company_news(ticker: str, start_dt: datetime, lookback_days: int) -> List[Dict]:
+def finnhub_company_news(ticker: str, start_dt: datetime, end_dt: datetime) -> List[Dict]:
     """
-    Fetch company news from Finnhub for the prior window:
-    [start_dt - lookback_days, start_dt)
+    Fetch company news from Finnhub between [start_dt, end_dt].
     """
-    api_key = (os.getenv("finn_key") or "").strip()  # trim hidden whitespace/newlines
-    print(f"[DEBUG] finn_key len={len(api_key)}  mask={api_key[:4]}...{api_key[-4:] if len(api_key)>=8 else ''}")
-
+    api_key = (os.getenv("finn_key") or "").strip()
     if not api_key:
         print("[WARN] finn_key not set; skipping Finnhub fetch.")
         return []
 
     symbol = (ticker or "").upper()
-    from_date = (start_dt - timedelta(days=lookback_days)).date().isoformat()
-    to_date   = (start_dt - timedelta(days=1)).date().isoformat()
+    from_date = start_dt.date().isoformat()
+    to_date   = end_dt.date().isoformat()
 
     url = "https://finnhub.io/api/v1/company-news"
     params = {"symbol": symbol, "from": from_date, "to": to_date, "token": api_key}
+
+    print(f"[DEBUG] Finnhub fetch: {symbol} {from_date} → {to_date}")
 
     try:
         r = requests.get(url, params=params, headers=UA, timeout=15)
         if r.status_code in (429, 502, 503, 504):
             time.sleep(1.5)
-            print(f"[DEBUG] hitting {url} with params={params}")
-
             r = requests.get(url, params=params, headers=UA, timeout=15)
-
-        raw_text = r.text[:200]
-        try:
-            r.raise_for_status()
-        except Exception as e:
-            print(f"[WARN] Finnhub HTTP error {r.status_code}: {raw_text}")
-            return []
+        r.raise_for_status()
 
         data = r.json()
         if isinstance(data, dict):
             print(f"[WARN] Finnhub returned error JSON: {data}")
             return []
         if not isinstance(data, list):
-            print(f"[WARN] Unexpected Finnhub payload type: {type(data)}; body={raw_text}")
+            print(f"[WARN] Unexpected Finnhub payload type: {type(data)}")
             return []
 
     except Exception as e:
@@ -162,7 +153,9 @@ def finnhub_company_news(ticker: str, start_dt: datetime, lookback_days: int) ->
             "source": item.get("source"),
             "text": item.get("summary") or ""
         })
+
     return out
+
 def finnhub_company_news_limited(
     ticker: str,
     start_dt: datetime,
@@ -332,6 +325,80 @@ def main():
         json.dump(result, f, indent=2, ensure_ascii=False)
 
     print(f"[DONE] wrote {out_path}")
+
+def parse_date(d: str) -> datetime:
+    # Try both ISO (YYYY-MM-DD) and US (MM-DD-YYYY) formats
+    for fmt in ("%Y-%m-%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(d, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    raise ValueError(f"Unrecognized date format: {d}")
+
+def run_scraper(ticker: str, start: str, end: str, fetch_text: bool = True) -> dict:
+    """
+    Runs the scraper and returns the analysis result as a Python dict
+    instead of writing to a file.
+    """
+    print(f"[API CALL] Running scraper for {ticker} {start}->{end}")
+    start_dt = parse_date(start)
+    end_dt = parse_date(end)
+
+    company = resolve_company_name_from_ticker(ticker)
+    s_close, e_close, pct, label = window_change(ticker, start_dt.date().isoformat(), end_dt.date().isoformat())
+    if pct is None:
+        raise ValueError("No price data returned for that window (check ticker or dates).")
+
+    entries = finnhub_company_news(ticker, start_dt, end_dt)
+
+    articles = []
+    for e in entries:
+        pub_iso = e.get("published_at")
+        if not pub_iso:
+            continue
+
+        try:
+            # Normalize to UTC regardless of timezone format
+            pub_dt = datetime.fromisoformat(pub_iso.replace("Z", "+00:00"))
+        except Exception:
+            continue
+
+        # Convert everything to naive UTC for consistent comparison
+        pub_dt = pub_dt.replace(tzinfo=None)
+        s_dt = start_dt.replace(tzinfo=None)
+        e_dt = end_dt.replace(tzinfo=None)
+
+        # ✅ Include articles published within a few days around the window
+        # (to prevent small timezone or API timing mismatches)
+        buffer = timedelta(days=1)
+        if not (s_dt - buffer <= pub_dt <= e_dt + buffer):
+            continue
+
+        url = e.get("url")
+        full_text = fetch_article_text(url) if fetch_text else e.get("text", "")
+
+        articles.append({
+            "title": e.get("title"),
+            "url": url,
+            "published_at": pub_iso,
+            "source": e.get("source"),
+            "text": full_text
+        })
+
+
+    result = {
+        "ticker": ticker,
+        "company": company,
+        "start_date": start_dt.strftime("%Y-%m-%d"),
+        "end_date": end_dt.strftime("%Y-%m-%d"),
+        "net_gain": round(pct, 6),
+        "label": label,
+        "articles": articles,
+    }
+
+    print(f"[✅ DONE] Scraper finished for {ticker}")
+    return result
+
 
 if __name__ == "__main__":
     main()
